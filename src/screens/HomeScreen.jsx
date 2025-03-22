@@ -1,59 +1,57 @@
 import React, {useEffect,useState,useRef} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Animated,Alert,Button} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-const Bubble = ({delay, startPosition})=> {
-  const bubbleAnimation = new Animated.Value(0);
-  useEffect(() => {
-    const animate = () => {
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(bubbleAnimation, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        bubbleAnimation.setValue(0);
-        animate();
-      });
-    };
-
-    animate();
-  }, [delay]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.bubble,
-        {
-          left: startPosition,
-          transform: [
-            {
-              translateY: bubbleAnimation.interpolate({
-                inputRange: [0, 2],
-                outputRange: [200, -150],
-              }),
-            },
-            {
-              scale: bubbleAnimation.interpolate({
-                inputRange: [0, 0.2, 0.8, 1],
-                outputRange: [0, 1, 1, 0],
-              }),
-            },
-          ],
-          opacity: bubbleAnimation.interpolate({
-            inputRange: [0, 0.2, 0.8, 1],
-            outputRange: [0, 0.5, 0.5, 0],
-          }),
-        },
-      ]}
-    />
-  );
-};
-
-
-
 const HomeScreen = () => {
+  const Bubble = ({delay, startPosition})=> {
+    const bubbleAnimation = new Animated.Value(0);
+    useEffect(() => {
+      const animate = () => {
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(bubbleAnimation, {
+            toValue: 1,
+            duration: 1200,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          bubbleAnimation.setValue(0);
+          animate();
+        });
+      };
+  
+      animate();
+    }, [delay]);
+  
+    return (
+      <Animated.View
+        style={[
+          styles.bubble,
+          {
+            left: startPosition,
+            transform: [
+              {
+                translateY: bubbleAnimation.interpolate({
+                  inputRange: [0, 2],
+                  outputRange: [200, -150],
+                }),
+              },
+              {
+                scale: bubbleAnimation.interpolate({
+                  inputRange: [0, 0.2, 0.8, 1],
+                  outputRange: [0, 1, 1, 0],
+                }),
+              },
+            ],
+            opacity: bubbleAnimation.interpolate({
+              inputRange: [0, 0.2, 0.8, 1],
+              outputRange: [0, 0.5, 0.5, 0],
+            }),
+          },
+        ]}
+      />
+    );
+  };
+  
   const [barHeight,setHeight] = useState(0)
   let targetWater = 2000;
   const [currentWater,setWater] = useState(0);
@@ -94,7 +92,7 @@ const HomeScreen = () => {
     };
 
     animate();
-  }, []);
+  },[currentWater]);
 
   return (
     <View style={styles.container}>
@@ -214,7 +212,6 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 15,
-    elevation: 3,
     overflow: 'hidden',
   },
   buttonGradient: {

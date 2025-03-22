@@ -5,6 +5,8 @@ import HomeScreen from './src/screens/HomeScreen';
 import SettingsScreen from './src/screens/Settings.Screen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { setupDatabase } from './src/screens/database';
+import { useEffect } from 'react';
 
 const Tab = createBottomTabNavigator();
 

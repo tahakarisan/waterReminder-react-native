@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {View, Text, StyleSheet, Dimensions,TextInput} from 'react-native';
+import {View, Text, StyleSheet, Dimensions,TextInput,Switch,TouchableOpacity, Alert} from 'react-native';
 import Slider from '../../node_modules/@react-native-community/slider'
 let heightPhone = Dimensions.get("window").height/10
 const SettingsScreen = () => {
@@ -7,13 +7,18 @@ const SettingsScreen = () => {
   const [endTime,setEndTime]=useState(9.00);
   const [target,setTarget]=useState(2000);
   const [notificationDensity,setDensity] = useState(60);
+  const [activateNotification,setActivate] = useState(true);
+  const updateNotification = ()=> {
+    setActivate(!activateNotification);
+    console.log(activateNotification);
+  }
   const updateDensity = (number)=>{
     setDensity(notificationDensity+number);
     console.log(notificationDensity);
   }
   const updateTarget = ()=>{
      setTarget(target)
-     console.log(target)
+     Alert.alert("Ayarlar Kaydedildi")
   }
   return (
     <View style={styles.container}>
@@ -66,6 +71,20 @@ const SettingsScreen = () => {
         placeholderTextColor="#888"
       />
     </View>
+    <View style={styles.settingContainerHour}>
+    <Text style={styles.settingItem}>Bildirim Ayarları</Text>
+      <View style={styles.notificationContainer}>
+      <Text style={[styles.settingItem,styles.marginPosition]}>Bildirimlere İzin Ver</Text>
+      <Switch
+        value={activateNotification}
+        onValueChange={updateNotification}
+        style={{marginTop:30}}
+      />
+      </View>
+    </View>
+    <TouchableOpacity onPress={()=>{updateTarget()}}>
+      <Text style={styles.saveButton}>Ayarları Kaydet</Text>
+    </TouchableOpacity>
     </View>
     </View>
   );
@@ -75,6 +94,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     padding: 20,
+  },
+  marginPosition:{
+    marginLeft:10,
+    marginTop:10,
+  }
+  ,
+  saveButton:{
+    textAlign:"center",
+    fontSize:22,
+    marginTop:12,
+    borderColor:"#2196F3",
+    backgroundColor:"#E3F2FD",
+    borderWidth:1,
+    padding:10,
+    borderRadius:10,
+  },
+  notificationContainer:{
+    flexDirection:"row",
+    justifyContent:"space-between",
   },
   title: {
     fontSize: 24,
@@ -89,7 +127,7 @@ const styles = StyleSheet.create({
     color:"#2196F3"
   },
   settingContainer:{
-    marginTop:20,
+    marginTop:12,
     borderWidth:1,
     borderRadius:10,
     borderColor:"#2196F3",
