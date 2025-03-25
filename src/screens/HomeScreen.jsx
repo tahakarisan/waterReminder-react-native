@@ -64,15 +64,6 @@ const HomeScreen = () => {
       console.log("Devam")
     }
   }
-  
-  const changeGlass = ()=>{
-    <View>
-      <Text>Taha</Text>
-      <Text></Text>
-      <Text></Text>
-      <Text></Text>
-    </View>
-  }
 
   const waterAnimation = new Animated.Value(0);
   useEffect(() => {
@@ -96,10 +87,8 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Başlık */}
       <Text style={styles.title}>Günlük Su Takibi</Text>
-
-      {/* Su Deposu Göstergesi */}
+      
       <View style={styles.waterContainer}>
         <Text style={styles.waterText}>{(currentWater/targetWater)*100}%</Text>
         <LinearGradient
@@ -141,7 +130,7 @@ const HomeScreen = () => {
           <LinearGradient
             colors={['#4FC3F7', '#2196F3']}
             style={styles.buttonGradient}>
-            <Text style={styles.buttonText} onPress={changeGlass}>🥤 Bardağı Değiştir</Text>
+            <Text style={styles.buttonText} onPress={()=>{}}>🥤 Bardağı Değiştir</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>

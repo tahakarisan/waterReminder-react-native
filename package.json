@@ -1,5 +1,5 @@
 {
-  "name": "waterReminder",
+  "name": "waterreminder",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -13,14 +13,21 @@
     "@react-native-community/slider": "^4.5.6",
     "@react-navigation/bottom-tabs": "^7.2.1",
     "@react-navigation/native": "^7.0.15",
+    "@react-navigation/stack": "^7.2.3",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
     "react": "19.0.0",
     "react-native": "0.78.0",
     "react-native-fs": "^2.20.0",
+    "react-native-gesture-handler": "^2.24.0",
     "react-native-linear-gradient": "^2.8.3",
+    "react-native-reanimated": "^3.17.1",
     "react-native-safe-area-context": "^5.3.0",
-    "react-native-screens": "^4.9.1",
+    "react-native-screens": "^4.9.2",
     "react-native-sqlite-storage": "^6.0.1",
-    "react-native-vector-icons": "^10.2.0"
+    "react-native-vector-icons": "^10.2.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -46,5 +53,19 @@
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "description": "This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tahakarisan/waterReminder-react-native.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/tahakarisan/waterReminder-react-native/issues"
+  },
+  "homepage": "https://github.com/tahakarisan/waterReminder-react-native#readme"
 }

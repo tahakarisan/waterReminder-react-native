@@ -1,10 +1,18 @@
 import React from 'react';
-import {View, Text, StyleSheet,ActivityIndicator} from 'react-native';
-
-const HistoryScreen = () => {
+import {View, Text, StyleSheet,ActivityIndicator,Button} from 'react-native';
+import Input from '../../components/Input';
+  const HistoryScreen = ({navigation}) => {
+  function routeUserForm(){
+    navigation.navigate("UserRegister")
+  }
   return (
+    
     <View style={styles.container}>
       <Text style={styles.title}>Su İçme Geçmişi</Text>
+      <Button
+        title="Kulanıcı Kayıt Formu"
+        onPress={routeUserForm}
+      />
     </View>
   );
 };

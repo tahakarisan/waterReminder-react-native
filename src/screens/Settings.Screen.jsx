@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {View, Text, StyleSheet, Dimensions,TextInput,Switch,TouchableOpacity, Alert} from 'react-native';
 import Slider from '../../node_modules/@react-native-community/slider'
+
 let heightPhone = Dimensions.get("window").height/10
 const SettingsScreen = () => {
   const [starterTime,setStarterTime]=useState(9.00);
@@ -67,7 +68,7 @@ const SettingsScreen = () => {
         value={endTime}
         onChangeText={(text) => setEndTime(text)}
         keyboardType="numeric" 
-        placeholder="Son Saati gir (HH:MM)"
+        placeholder="Bitiş Saati gir (HH:MM)"
         placeholderTextColor="#888"
       />
     </View>
