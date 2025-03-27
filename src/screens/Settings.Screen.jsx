@@ -5,10 +5,11 @@ import Slider from '../../node_modules/@react-native-community/slider'
 let heightPhone = Dimensions.get("window").height/10
 const SettingsScreen = () => {
   const [starterTime,setStarterTime]=useState(9.00);
-  const [endTime,setEndTime]=useState(9.00);
+  const [endTime,setEndTime]=useState(23.00);
   const [target,setTarget]=useState(2000);
   const [notificationDensity,setDensity] = useState(60);
   const [activateNotification,setActivate] = useState(true);
+  const defaultStarterTime = 23.00 
   const updateNotification = ()=> {
     setActivate(!activateNotification);
     console.log(activateNotification);
@@ -60,16 +61,16 @@ const SettingsScreen = () => {
         value={starterTime} // Başlangıçta "12:00"
         onChangeText={(text) => setStarterTime(text)} // Kullanıcı değiştirebilir
         keyboardType="numeric" // Sadece rakam girişine izin verir
-        placeholder="Başlangıç Saat gir (HH:MM)"
-        placeholderTextColor="#888"
+        placeholder="Başlangıç: 9.00 (Default)"
+        placeholderTextColor="black"
       />
       <TextInput
         style={styles.input}
         value={endTime}
         onChangeText={(text) => setEndTime(text)}
         keyboardType="numeric" 
-        placeholder="Bitiş Saati gir (HH:MM)"
-        placeholderTextColor="#888"
+        placeholder="Bitiş: 23.00 (Default)"
+        placeholderTextColor="black"
       />
     </View>
     <View style={styles.settingContainerHour}>

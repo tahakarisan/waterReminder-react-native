@@ -1,7 +1,41 @@
 import React, {useEffect,useState,useRef} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Animated,Alert,Button} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity,ActivityIndicator, Animated,Alert} from 'react-native';
+import Button from "../../components/Button/Button"
 import LinearGradient from 'react-native-linear-gradient';
-const HomeScreen = () => {
+import {checkUserExists} from './database/database'
+const HomeScreen = ({navigation}) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [userExists, setUserExists] = useState(false);
+
+  useEffect(() => {
+    checkUserExists()
+      .then(exists => {
+        setUserExists(exists);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        console.error("User check error: ", error);
+        setIsLoading(false);
+      });
+  }, []);
+
+  if (isLoading) {
+    return <ActivityIndicator size="large" />;
+  }
+  
+  return (
+    <View>
+      {userExists ? (
+        <Text>Hoşgeldin! Ana sayfaya yönlendiriliyorsun...</Text>
+      ) : (
+        <View>
+          <Text>Hoş Geldiniz!</Text>
+          <Button title="Kayıt Ol" onPress={() => navigation.navigate('UserRegister')} />
+        </View>
+      )}
+    </View>
+  );
+  
   const Bubble = ({delay, startPosition})=> {
     const bubbleAnimation = new Animated.Value(0);
     useEffect(() => {

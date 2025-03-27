@@ -11,11 +11,19 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
+
 // Stack Navigatörü Tanımlama (History'den UserRegister'a gitmek için)
 function HistoryStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HistoryMain" component={HistoryScreen} />
+    </Stack.Navigator>
+  );
+}
+function HomePageStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="UserRegister" component={UserRegisterScreen} />
     </Stack.Navigator>
   );
@@ -32,7 +40,7 @@ function MainTabs() {
       }}>
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={HomePageStack}
         options={{
           tabBarLabel: 'Ana Sayfa',
           tabBarIcon: ({ color, size }) => (
@@ -57,6 +65,16 @@ function MainTabs() {
           tabBarLabel: 'Ayarlar',
           tabBarIcon: ({ color, size }) => (
             <Icon name="settings" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={SettingsScreen}
+        options={{
+          tabBarLabel: 'Profil',
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="account-circle" size={size} color={color} />
           ),
         }}
       />

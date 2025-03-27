@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ActivityIndicator,TextInput, TouchableOpacity } from "react-native";
 
-function Input({type,onPress,placeHolder})
+function Input({thisValue,type,onPress,placeHolder})
 {
     return(
         <View style={styles.container}>
@@ -9,8 +9,9 @@ function Input({type,onPress,placeHolder})
                 style={styles.button}
                 keyboardType={type}
                 onChangeText={onPress}
-                placeHolder={placeHolder}
-                placeHolderTextColor="black"
+                placeholder={placeHolder}
+                placeholderTextColor="black"
+                value={thisValue}
             />
         </View>
     );
@@ -21,7 +22,7 @@ const styles = StyleSheet.create({
     },
     button:{
         padding:10,
-        backgroundColor:"#eefc",
+        backgroundColor:"#D1D8FE",
         borderRadius:8,
         margin:10,
     }
