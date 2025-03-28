@@ -8,13 +8,52 @@ const db = SQLite.openDatabase(
   () => console.log('Database connected!'),
   error => console.error('Database error: ', error)
 );
-
-export const checkUserExists = async () => {
+export const addUser = async (name, email, age, weight, gender) => {
   return new Promise((resolve, reject) => {
     db.transaction(tx => {
       tx.executeSql(
-        "SELECT COUNT(*) AS userCount FROM Users;",
-        [],
+        `INSERT INTO Users (name, email, age, weight, gender) VALUES (?, ?, ?, ?, ?);`,
+        [name, email, age, weight, gender],
+        (_, result) => {
+          console.log("Kullanıcı eklendi:", result.insertId);
+          resolve(result.insertId);  // Eklenen kullanıcının ID'sini döndürür
+        },
+        (_, error) => {
+          console.error("Kullanıcı ekleme hatası:", error);
+          reject(error);
+        }
+      );
+    });
+  });
+};
+export const getUserById = async (userId) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `SELECT * FROM Users WHERE id = ?;`,
+        [userId],
+        (_, result) => {
+          if (result.rows.length > 0) {
+            resolve(result.rows.item(0));  // İlk kullanıcıyı döndür
+          } else {
+            resolve(null);  // Kullanıcı bulunamadıysa null döndür
+          }
+        },
+        (_, error) => {
+          console.error("Kullanıcı getirme hatası:", error);
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+export const checkUserExists = async (id) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        "SELECT COUNT(*) AS userCount FROM Users Where id = ?;",
+        [id],
         (_, result) => {
           const count = result.rows.item(0).userCount;
           resolve(count > 0);  // Eğer count > 0 ise true döner
@@ -28,7 +67,6 @@ export const checkUserExists = async () => {
 export const initializeDatabase = () => {
   db.executeSql("PRAGMA foreign_keys = ON;");
   db.transaction(tx => {
-    
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS Users (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

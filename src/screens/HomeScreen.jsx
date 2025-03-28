@@ -1,14 +1,26 @@
-import React, {useEffect,useState,useRef} from 'react';
+import React, {useEffect,useState} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity,ActivityIndicator, Animated,Alert} from 'react-native';
 import Button from "../../components/Button/Button"
 import LinearGradient from 'react-native-linear-gradient';
-import {checkUserExists} from './database/database'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {checkUserExists,getUserById} from './database/database'
 const HomeScreen = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userExists, setUserExists] = useState(false);
-
+  const getData = async (key) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value !== null) {
+        console.log('Alınan veri:', value);
+        return value;
+      }
+    } catch (error) {
+      console.error('Veri okunurken hata oluştu:', error);
+    }
+  };
+  
   useEffect(() => {
-    checkUserExists()
+    checkUserExists(getData("userId"))
       .then(exists => {
         setUserExists(exists);
         setIsLoading(false);
@@ -18,24 +30,6 @@ const HomeScreen = ({navigation}) => {
         setIsLoading(false);
       });
   }, []);
-
-  if (isLoading) {
-    return <ActivityIndicator size="large" />;
-  }
-  
-  return (
-    <View>
-      {userExists ? (
-        <Text>Hoşgeldin! Ana sayfaya yönlendiriliyorsun...</Text>
-      ) : (
-        <View>
-          <Text>Hoş Geldiniz!</Text>
-          <Button title="Kayıt Ol" onPress={() => navigation.navigate('UserRegister')} />
-        </View>
-      )}
-    </View>
-  );
-  
   const Bubble = ({delay, startPosition})=> {
     const bubbleAnimation = new Animated.Value(0);
     useEffect(() => {
@@ -119,60 +113,102 @@ const HomeScreen = ({navigation}) => {
     animate();
   },[currentWater]);
 
+  if (isLoading) {
+    return <ActivityIndicator size="large" />;
+  }
+  
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Günlük Su Takibi</Text>
-      
-      <View style={styles.waterContainer}>
-        <Text style={styles.waterText}>{(currentWater/targetWater)*100}%</Text>
-        <LinearGradient
-          colors={['#4FC3F7', '#2196F3', '#1976D2']}
-          style={[styles.waterLevel,{height:barHeight}]}>
-          <Animated.View
-            style={[
-              styles.wave,
-              {
-                transform: [
-                  {
-                    translateY: waterAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 20],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          />
-          <Bubble delay={0} startPosition="20%" />
-          <Bubble delay={0} startPosition="0%"/>
-          <Bubble delay={0} startPosition="60%" />
-          <Bubble delay={0} startPosition="80%" />
-          <Bubble delay={0} startPosition="30%" />
-        </LinearGradient>
-      </View>
-
-      {/* Butonlar */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={UpdateWater} style={styles.button}>
-          <LinearGradient 
-            colors={['#4FC3F7', '#2196F3']}
-            style={styles.buttonGradient}>
-            <Text  style={styles.buttonText}>💧 Su İç</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
+    <View>
+      {userExists ? 
+      (
+        <View style={styles.container}>
+        <Text style={styles.title}>Günlük Su Takibi</Text>
+        
+        <View style={styles.waterContainer}>
+          <Text style={styles.waterText}>{(currentWater/targetWater)*100}%</Text>
           <LinearGradient
-            colors={['#4FC3F7', '#2196F3']}
-            style={styles.buttonGradient}>
-            <Text style={styles.buttonText} onPress={()=>{}}>🥤 Bardağı Değiştir</Text>
+            colors={['#4FC3F7', '#2196F3', '#1976D2']}
+            style={[styles.waterLevel,{height:barHeight}]}>
+            <Animated.View
+              style={[
+                styles.wave,
+                {
+                  transform: [
+                    {
+                      translateY: waterAnimation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 20],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            />
+            <Bubble delay={0} startPosition="20%" />
+            <Bubble delay={0} startPosition="0%"/>
+            <Bubble delay={0} startPosition="60%" />
+            <Bubble delay={0} startPosition="80%" />
+            <Bubble delay={0} startPosition="30%" />
           </LinearGradient>
-        </TouchableOpacity>
+        </View>
+  
+        {/* Butonlar */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity onPress={UpdateWater} style={styles.button}>
+            <LinearGradient 
+              colors={['#4FC3F7', '#2196F3']}
+              style={styles.buttonGradient}>
+              <Text  style={styles.buttonText}>💧 Su İç</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button}>
+            <LinearGradient
+              colors={['#4FC3F7', '#2196F3']}
+              style={styles.buttonGradient}>
+              <Text style={styles.buttonText} onPress={()=>{}}>🥤 Bardağı Değiştir</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
+      ) 
+      
+      //değilse
+      
+      : (
+        <View style={styles.textContainer}>
+          <Text style={styles.welcomeText}>Hoş Geldiniz!</Text>
+          
+          <Text style={styles.text}>Uygulamamıza Kayıt Olun :)</Text>
+          
+          
+          
+          <Button 
+            title="Kayıt Ol" 
+            onPress={() => navigation.navigate('UserRegister')} 
+          />
+          
+        </View>
+      )}
     </View>
   );
+  
+  
 };
 
 const styles = StyleSheet.create({
+  textContainer:{
+    marginTop:120,
+    alignItems:"center"
+  },
+  text:{
+    fontSize:18,
+    color: "#007bff",
+    textAlign:"center",
+    fontWeight:"bold",
+    marginTop:30,
+    marginBottom:12,
+    fontSize:20
+  },
   container: {
     flex: 1,
     backgroundColor: 'white',
@@ -184,6 +220,12 @@ const styles = StyleSheet.create({
     color: '#1976D2',
     marginBottom: 20,
     textAlign: 'center',
+  },
+  welcomeText:{
+    marginTop:20,
+    fontSize:34,
+    textAlign:"center",
+    fontWeight:"bold",
   },
   waterContainer: {
     width: '60%',

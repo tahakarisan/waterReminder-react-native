@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './src/screens/HomeScreen';
 import SettingsScreen from './src/screens/Settings.Screen'; // Hata düzeltilmiş
 import HistoryScreen from './src/screens/HistoryScreen';
+import ProfileScreen from './src/screens/ProfileScreen'
 import UserRegisterScreen from './src/screens/UserRegister.Screen'; // Hata düzeltilmiş
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -70,7 +71,7 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Profile"
-        component={SettingsScreen}
+        component={ProfileScreen}
         options={{
           tabBarLabel: 'Profil',
           tabBarIcon: ({ color, size }) => (

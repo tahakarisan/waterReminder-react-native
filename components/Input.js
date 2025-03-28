@@ -1,17 +1,17 @@
 import React from "react";
 import { View, Text, StyleSheet, ActivityIndicator,TextInput, TouchableOpacity } from "react-native";
 
-function Input({thisValue,type,onPress,placeHolder})
+function Input({value,type,onChangeText,placeHolder})
 {
     return(
         <View style={styles.container}>
             <TextInput
                 style={styles.button}
                 keyboardType={type}
-                onChangeText={onPress}
+                onChangeText={onChangeText}
                 placeholder={placeHolder}
                 placeholderTextColor="black"
-                value={thisValue}
+                value={value}
             />
         </View>
     );
