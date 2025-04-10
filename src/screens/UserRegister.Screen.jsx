@@ -1,101 +1,153 @@
 import React,{useState} from "react";
-import { View, Text, StyleSheet, ActivityIndicator, YellowBox } from "react-native";
+import { View, Text, StyleSheet,ScrollView, ActivityIndicator,} from "react-native";
 import { Picker } from '@react-native-picker/picker';
-import { addUser,getUserById } from "./database/database";
 import Input from "../../components/Input";
 import Button from "../../components/Button/Button";
+import auth from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-function UserRegisterScreen()
-{
-        const storeData = async (key, value) => {
-                try {
-                  await AsyncStorage.setItem(key, value);
-                  console.log('Veri başarıyla kaydedildi.');
-                } catch (error) {
-                  console.error('Veri kaydedilirken hata oluştu:', error);
-                }
-        };
+import { useEffect } from "react";
+function UserRegisterScreen({navigation})
+{       
+    const handleLogin = async () => {
+        // Giriş yapıldığını AsyncStorage'da tut
+        await AsyncStorage.setItem('userLoggedIn', 'true');
+        navigation.navigate('HomeMain'); // Giriş yaptıktan sonra ana ekrana git
+    };
         const[name,setName] = useState(null);
         const[age,setAge] = useState(null);
+        const[password,setPassword] = useState(null);
         const[email,setEmail] = useState(null);
         const[weight,setWeight] = useState(null);
         const [gender, setGender] = useState("Male");
-        function getUser(){
-                getUserById(userId)
-                .then(user => {
-                if (user) {
-                console.log("Kullanıcı bulundu:", user);
-        } else {
-        console.log("Kullanıcı bulunamadı.");
-    }
-  })
-  .catch(error => {
-    console.error("Hata oluştu:", error);
-  });
-        }
-        const handleRegister = async () => {
-                console.log(name,age,email,weight,gender)
+        const signUp = async () => {
                 try {
-                  const userId = await addUser(name, email, parseInt(age), parseFloat(weight), gender);
-                  storeData("userId",userId);
-                  console.log("Kullanıcı başarıyla eklendi:", userId);
-                  // Burada kullanıcıya bir başarı mesajı gösterebilirsiniz.
-                } catch (error) {
-                  console.error("Kullanıcı ekleme hatası:", error);
-                  // Burada hata mesajı gösterebilirsiniz.
-                }
-              };
-        return (
-        <View>
-            <Text style={styles.header}>Kullanıcı Kayıt Ekranı</Text>
-            <Text style={styles.label}>İsim</Text>
-            <Input
-                    type="text"
-                    onChangeText={setName}
-                    placeHolder="Adınızı Girin"
-                    value={name}
-            />
-            <Text style={styles.label}>Yaş</Text>
-            <Input
-                    type="numeric"
-                    onChangeText={setAge}
-                    placeHolder="Yaşınızı Girin"
-                    value={age}
-            />
-            <Text style={styles.label}>E-Mail Adresi</Text>
-            <Input
-                    type="text"
-                    onChangeText={setEmail}
-                    placeHolder="Email Adresinizi Girin"
-                    value={email}
-            />
-            <Text style={styles.label}>Kilonuz</Text>
-            <Input
-                    type="numeric"
-                    onChangeText={setWeight}
-                    placeHolder="Kilonuzu Girin"
-                    value={weight}
-            />
-            <Text style={styles.label}>Cinsiyet Seç:</Text>
-        <Picker
-           selectedValue={gender}
-           onValueChange={(itemValue) =>setGender(itemValue)}
-           style={styles.picker}
-          >
-          <Picker.Item label="Erkek" value="Male" />
-          <Picker.Item label="Kadın" value="Female" />
-          <Picker.Item label="Diğer" value="Other" />
-                </Picker>    
-            <View style={styles.container}>
-            <Button
-                title="Kayıt Ol" 
-                onPress={handleRegister}
-                backgroundColor="#4da6ff"
-                textColor="white"
-            />
-            </View>
+                    // Kullanıcıyı e-posta ve şifre ile oluştur
+                    const userCredential = await auth()
+                        .createUserWithEmailAndPassword(email, password);
+                    
+                    const user = userCredential.user; // Kullanıcı objesini al
             
-        </View>
+                    // Firebase Realtime Database'e kullanıcı bilgilerini kaydet
+                    const reference = database().ref('users/');
+            
+                    // Kullanıcının UID'sini anahtar olarak kullan
+                    const newUserRef = reference.child(user.uid);  // UID'yi anahtar olarak kullan
+            
+                    newUserRef.set({
+                        name: name,
+                        email: email,
+                        age: age,
+                        password: password,
+                        weight: weight,
+                        gender: gender,
+                    })
+                    .then(() => {
+                        console.log("Veri başarıyla gönderildi!");
+                        navigation.navigate("HomeMain",user.uid);
+                    })
+                    .catch((error) => {
+                        console.error("Veri gönderilirken hata oluştu:", error);
+                    });
+                    handleLogin(); // Giriş yapıldıktan sonra ana ekrana git
+            
+                    console.log('Kullanıcı bilgileri veritabanına kaydedildi!');
+                    
+                } catch (error) {
+                    // Hata durumlarını kontrol et
+                    if (error.code === 'auth/email-already-in-use') {
+                        console.log('Bu e-posta adresi zaten kullanımda!');
+                    } else if (error.code === 'auth/invalid-email') {
+                        console.log('Geçersiz e-posta adresi!');
+                    } else {
+                        console.error('Genel hata:', error);
+                    }
+                }
+                auth().signInWithEmailAndPassword(email, password)
+                .
+                then(console.log("Giriş Başarılı"))
+                .
+                catch((error) => {console.log(error)
+
+                 });
+            };
+            
+            useEffect(() => {
+                // Firebase'i başlatma (önceden yapılandırıldıysa tekrar gerek olmayabilir)
+                database()
+                    .ref('/users')
+                    .once('value')
+                    .then(snapshot => {
+                        console.log(snapshot.val());
+                    });
+            }, []);
+            
+            
+            
+            
+        return (
+
+                <View style={styles.container}>
+                    <ScrollView contentContainerStyle={styles.scrollContainer}>
+                        <Text style={styles.header}>Kullanıcı Kayıt Ekranı</Text>
+                        <Text style={styles.label}>İsim</Text>
+                        <Input
+                            type="text"
+                            onChangeText={setName}
+                            placeHolder="Adınızı Girin"
+                            value={name}
+                        />
+                        <Text style={styles.label}>Yaş</Text>
+                        <Input
+                            type="numeric"
+                            onChangeText={setAge}
+                            placeHolder="Yaşınızı Girin"
+                            value={age}
+                        />
+                        <Text style={styles.label}>E-Mail Adresi</Text>
+                        <Input
+                            type="text"
+                            onChangeText={setEmail}
+                            placeHolder="Email Adresinizi Girin"
+                            value={email}
+                        />
+                        <Text style={styles.label}>Şifre</Text>
+                        <Input
+                            type="text"
+                            onChangeText={setPassword}
+                            placeHolder="Şifrenizi Girin"
+                            value={password}
+                        />
+                        <Text style={styles.label}>Kilonuz</Text>
+                        <Input
+                            type="numeric"
+                            onChangeText={setWeight}
+                            placeHolder="Kilonuzu Girin"
+                            value={weight}
+                        />
+                        <Text style={styles.label}>Cinsiyet Seç:</Text>
+                        <Picker
+                            selectedValue={gender}
+                            onValueChange={(itemValue) => setGender(itemValue)}
+                            style={styles.picker}
+                            dropdownIconColor="blue"
+                            dropdownIconRippleColor="#2196F3"
+                        >
+                            <Picker.Item label="Erkek" value="Male" />
+                            <Picker.Item label="Kadın" value="Female" />
+                            <Picker.Item label="Diğer" value="Other" />
+                        </Picker>    
+                        <View style={styles.buttonContainer}>
+                            <Button
+                                title="Kayıt Ol"
+                                onPress={signUp}
+                                backgroundColor="#4da6ff"
+                                textColor="white"
+                            />
+                        </View>
+                    </ScrollView>
+                </View>
+                
     );
 
 }
@@ -111,18 +163,30 @@ const styles = StyleSheet.create({
         },
         picker: {
                 marginTop:10,
-                marginLeft:20,
+                marginLeft:24,
                 width: 200,
-                height: 50,
+                height: 60,
+                color:"#2196F3",
+                backgroundColor:"#D1D8FE"
               },
 
         label:{
                 fontSize:20,
                 marginLeft:24,
         },
-        container:{
-                alignItems:"center"
-        }
+        container: {
+                flex: 1,
+                padding:10,
+            },
+        scrollContainer: {
+                flexGrow: 1, // İçeriğin tüm yüksekliği kapsamasını sağlar
+                justifyContent: 'space-between',
+        },
+        buttonContainer: {
+                alignItems: 'center',
+                marginTop: 20,
+                marginBottom: 20, // Butonun alt kısmı ile diğer elemanlar arasındaki boşluğu arttır
+        },
 })
 
 export default UserRegisterScreen;

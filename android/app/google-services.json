@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "563168890297",
+    "project_id": "waterreminder-1905",
+    "storage_bucket": "waterreminder-1905.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:563168890297:android:d3239bb1089c2d6cd43a68",
+        "android_client_info": {
+          "package_name": "com.waterreminder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUmVECHyx7W1OiSxTeQFMRmRO-Yc1xN0Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
