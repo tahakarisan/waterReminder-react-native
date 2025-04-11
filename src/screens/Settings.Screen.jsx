@@ -9,7 +9,6 @@ const SettingsScreen = () => {
   const [target,setTarget]=useState(2000);
   const [notificationDensity,setDensity] = useState(60);
   const [activateNotification,setActivate] = useState(true);
-  const defaultStarterTime = 23.00 
   const updateNotification = ()=> {
     setActivate(!activateNotification);
     console.log(activateNotification);

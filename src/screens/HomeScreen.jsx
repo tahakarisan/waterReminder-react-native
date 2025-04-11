@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import database from '@react-native-firebase/database';
+import database, { get } from '@react-native-firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
@@ -14,11 +14,13 @@ import {
 
 const HomeScreen = ({route, navigation}) => {
   const userId = route.params;
+  const [id , setId] = useState(userId);
   const [isLoading, setIsLoading] = useState(false);
   const [userExists, setUserExists] = useState(false);
   const targetWater = 2000;
   const [currentWater, setWater] = useState(0);
-
+  const [loadWater, setLoadWater] = useState(false);  
+ 
   // Animasyon değerleri:
   const waterLevelAnim = useRef(new Animated.Value(0)).current; // Su seviyesi (yüzde olarak)
   const waveAnim = useRef(new Animated.Value(0)).current; // Dalga kayması
@@ -26,8 +28,81 @@ const HomeScreen = ({route, navigation}) => {
   const bubbleAnim1 = useRef(new Animated.Value(0)).current;
   const bubbleAnim2 = useRef(new Animated.Value(0)).current;
   const bubbleAnim3 = useRef(new Animated.Value(0)).current;
+
   
+  const getCurrentWater = () => {
+    const reference = database().ref(`/userWaterInfo/${id}`);
+  
+    const onValueChange = reference.on('value', snapshot => {
+      const data = snapshot.val();
+      if (data && data.waterIntake !== undefined) {
+        const value = data.waterIntake;
+        setWater(value);
+  
+        // 💧 Animasyonu da burada başlat
+        Animated.timing(waterLevelAnim, {
+          toValue: (value / targetWater) * 100,
+          duration: 500,
+          useNativeDriver: false,
+        }).start();
+      }
+    });
+  
+    return () => reference.off('value', onValueChange);
+  };
+  const getData = async (key) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value ? value : null; 
+    } catch (error) {
+      console.error("Veri okunurken hata oluştu:", error);
+      return null;
+    }
+  }
+  const fetchData = async () => {
+    const data = await getData("userId");
+    if (data !== null) {
+      setId(data)// Bu asenkron olduğu için getUser burada çağrılmamalı
+      console.log("User ID:", data);
+    }
+  };
+  
+  const setWaterIntake = async (waterLevel) => {
+    const getTurkeyTime = () => {
+      const options = { timeZone: 'Europe/Istanbul', hour12: false };
+      const turkeyDate = new Date().toLocaleString('en-US', options);
+      return turkeyDate;
+    };
+    
+    const getCurrentHourAndDate = () => {
+      const turkeyTime = new Date(getTurkeyTime());
+      const currentHour = turkeyTime.getHours();  // Saat
+      const currentMinute = turkeyTime.getMinutes();  // Dakika
+      const currentDay = turkeyTime.getDate();  // Gün
+      const currentMonth = turkeyTime.getMonth() + 1;  // Ay (0-11, 1 ekliyoruz)
+      const currentYear = turkeyTime.getFullYear();  // Yıl
+      
+      return {
+        currentDay,
+        currentMonth,
+        currentYear,
+        currentHour,
+        currentMinute
+      };
+    };
+    
+    const { currentDay, currentMonth, currentYear, currentHour, currentMinute } = getCurrentHourAndDate();
+      const reference  = database().ref(`/userWaterInfo/${id}`);
+      reference.set({
+        date: {currentDay:
+          currentDay,currentMonth:currentMonth,currentYear: currentYear,currentHour:currentHour,currentMinute:
+           currentMinute},
+        waterIntake: waterLevel,
+      })
+  }
+
   useEffect(() => {
+    fetchData();
     const checkLoginStatus = async () => {
       try {
         const userLoggedIn = await AsyncStorage.getItem('userLoggedIn');
@@ -43,9 +118,15 @@ const HomeScreen = ({route, navigation}) => {
       }
     };
     checkLoginStatus(); // Uygulama açıldığında login durumunu kontrol et
-
+    console.log('Test logu: Uygulama başlatıldı!');
   }, []); // Ekran ilk açıldığında çalışacak
-
+  useEffect(() => {
+    fetchData();// Uygulama başladığında AsyncStorage'dan su miktarını çek
+    console.log('Test logu: Uygulama başlatıldı!');
+  }, []); // İlk açılışta çalışacak
+  useEffect(() => {
+    if (id) {getCurrentWater();  
+}}, [id]); // id değiştiğinde tekrar veri çek,
   useEffect(() => {
     const getUserData = async () => {
       setIsLoading(true);
@@ -70,7 +151,6 @@ const HomeScreen = ({route, navigation}) => {
       }
       setIsLoading(false);
     };
-  
     if (userId) {
       getUserData();
     } else {
@@ -78,6 +158,8 @@ const HomeScreen = ({route, navigation}) => {
       setUserExists(false);
       setIsLoading(false);
     }
+    
+    
   }, [userId]);
 
   // Dalga animasyonu: dalganın yatay kayması
@@ -113,6 +195,7 @@ const HomeScreen = ({route, navigation}) => {
   };
 
   useEffect(() => {
+      
     startBubbleAnimation(bubbleAnim1, 500, 3000, 200);
     startBubbleAnimation(bubbleAnim2, 1000, 3500, 220);
     startBubbleAnimation(bubbleAnim3, 1500, 4000, 240);
@@ -123,6 +206,7 @@ const HomeScreen = ({route, navigation}) => {
     if (currentWater < targetWater) {
       const newWater = currentWater + 200;
       setWater(newWater);
+      setWaterIntake(newWater);
       Animated.timing(waterLevelAnim, {
         toValue: (newWater / targetWater) * 100,
         duration: 500,

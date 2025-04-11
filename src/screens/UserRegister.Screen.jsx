@@ -21,56 +21,59 @@ function UserRegisterScreen({navigation})
         const[weight,setWeight] = useState(null);
         const [gender, setGender] = useState("Male");
         const signUp = async () => {
-                try {
-                    // Kullanıcıyı e-posta ve şifre ile oluştur
-                    const userCredential = await auth()
-                        .createUserWithEmailAndPassword(email, password);
-                    
-                    const user = userCredential.user; // Kullanıcı objesini al
-            
-                    // Firebase Realtime Database'e kullanıcı bilgilerini kaydet
-                    const reference = database().ref('users/');
-            
-                    // Kullanıcının UID'sini anahtar olarak kullan
-                    const newUserRef = reference.child(user.uid);  // UID'yi anahtar olarak kullan
-            
-                    newUserRef.set({
+            try {
+                const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+        
+                // Settings verisi
+                await database()
+                    .ref(`settings/${user.uid}`)
+                    .set({
+                        userId: user.uid,
+                        dailyGoal: 2000,
+                        starterTime: 9.00,
+                        endTime: 23.00,
+                        notificationFrequency: 60,
+                        notificationStatus: true,
+                    });
+        
+                console.log("Ayarlar başarıyla kaydedildi!");
+        
+                // Kullanıcı bilgileri (şifresiz!)
+                await database()
+                    .ref(`users/${user.uid}`)
+                    .set({
                         name: name,
                         email: email,
                         age: age,
-                        password: password,
                         weight: weight,
                         gender: gender,
-                    })
-                    .then(() => {
-                        console.log("Veri başarıyla gönderildi!");
-                        navigation.navigate("HomeMain",user.uid);
-                    })
-                    .catch((error) => {
-                        console.error("Veri gönderilirken hata oluştu:", error);
                     });
-                    handleLogin(); // Giriş yapıldıktan sonra ana ekrana git
-            
-                    console.log('Kullanıcı bilgileri veritabanına kaydedildi!');
-                    
-                } catch (error) {
-                    // Hata durumlarını kontrol et
-                    if (error.code === 'auth/email-already-in-use') {
-                        console.log('Bu e-posta adresi zaten kullanımda!');
-                    } else if (error.code === 'auth/invalid-email') {
-                        console.log('Geçersiz e-posta adresi!');
-                    } else {
-                        console.error('Genel hata:', error);
-                    }
+        
+                console.log("Kullanıcı bilgileri başarıyla kaydedildi!");
+        
+                // Otomatik giriş yap
+                await auth().signInWithEmailAndPassword(email, password);
+        
+                console.log("Giriş başarılı!");
+        
+                // AsyncStorage ile UID kaydetmek istersen:
+                await AsyncStorage.setItem("userId", user.uid);
+        
+                // Ana sayfaya yönlendir
+                navigation.navigate("HomeMain", user.uid);
+        
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    console.log('Bu e-posta adresi zaten kullanımda!');
+                } else if (error.code === 'auth/invalid-email') {
+                    console.log('Geçersiz e-posta adresi!');
+                } else {
+                    console.error('Genel hata:', error);
                 }
-                auth().signInWithEmailAndPassword(email, password)
-                .
-                then(console.log("Giriş Başarılı"))
-                .
-                catch((error) => {console.log(error)
-
-                 });
-            };
+            }
+        };
+        
             
             useEffect(() => {
                 // Firebase'i başlatma (önceden yapılandırıldıysa tekrar gerek olmayabilir)

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getUserById } from './database/database';
+import database, { get } from '@react-native-firebase/database';
 
 const ProfileScreen = () => {
   const [parsedData, setData] = useState(null);
@@ -9,66 +9,50 @@ const ProfileScreen = () => {
   const [email, setEmail] = useState('');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
-  const [phone, setPhone] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
 
   const getData = async (key) => {
     try {
       const value = await AsyncStorage.getItem(key);
-      return value ? parseInt(value, 10) : null;
+      return value ? value : null; 
     } catch (error) {
       console.error("Veri okunurken hata oluştu:", error);
       return null;
     }
   }
-  function getUser(){
-    
-    console.log(parsedData)
-                getUserById(parsedData)
-                .then(user => {
-                if (user) {
-                  setName(user.name);
-                  setEmail(user.email);
-                  setWeight(user.weight);
-                  setAge(user.age)
-        } else {
-        console.log("Kullanıcı bulunamadı.");
-    }
-  })
-  .catch(error => {
-    console.error("Hata oluştu:", error);
-  });
-  }
+  
+  const getUser = () => {
+    const reference = database().ref('/users/' + parsedData);
+    const onValueChange = reference.on('value', snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        setName(data.name);
+        setEmail(data.email);
+        setAge(data.age);
+        setWeight(data.weight);
+      }
+    });
+  
+    // Component unmount olduğunda listener'ı kaldır
+    return () => reference.off('value', onValueChange);
+  };
   useEffect(() => {
     const fetchData = async () => {
       const data = await getData("userId");
-      setData(data);
       if (data !== null) {
-        const exists = await checkUserExists(data);
-        setUserExists(!!exists);
+        setData(data); // Bu asenkron olduğu için getUser burada çağrılmamalı
+        console.log("User ID:", data);
       }
-      setIsLoading(false);
     };
     fetchData();
-    loadProfile();
-    getUser();
   }, []);
 
-  
-  const loadProfile = async () => {
-    try {
-      
-      const storedName = await AsyncStorage.getItem('name');
-      const storedEmail = await AsyncStorage.getItem('email');
-      const storedPhone = await AsyncStorage.getItem('phone');
-      if (storedName) setName(storedName);
-      if (storedEmail) setEmail(storedEmail);
-      if (storedPhone) setPhone(storedPhone);
-    } catch (error) {
-      console.error('Veriler yüklenirken hata oluştu:', error);
+
+  useEffect(() => {
+    if (parsedData) {
+      getUser();
     }
-  };
+  }, [parsedData]);
 
   const saveProfile = async () => {
     try {
@@ -96,6 +80,9 @@ const ProfileScreen = () => {
           <View style={styles.inputContainer}>
           <TextInput style={styles.input} value={weight} onChangeText={setWeight} placeholder="Kilo" placeholderTextColor="black" keyboardType="phone-pad" />
           </View>
+          <View style={styles.inputContainer}>
+          <TextInput style={styles.input} value={age} onChangeText={setAge} placeholder="Yaş" placeholderTextColor="black" keyboardType="phone-pad" />
+          </View>
           <TouchableOpacity style={styles.button} onPress={saveProfile}>
             <Text style={styles.buttonText}>Kaydet</Text>
           </TouchableOpacity>
@@ -119,6 +106,10 @@ const ProfileScreen = () => {
         <View style={styles.profileInfo}>
           <Text style={styles.profileText}>Kilo:</Text>
           <Text style={styles.text}>{weight} kg</Text>
+        </View>
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileText}>Yaş:</Text>
+          <Text style={styles.text}>{age} kg</Text>
         </View>
       </View>
 
