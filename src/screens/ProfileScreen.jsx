@@ -87,7 +87,7 @@ const ProfileScreen = () => {
             <Text style={styles.buttonText}>Kaydet</Text>
           </TouchableOpacity>
         </>
-      ) : (
+       ) : (
         <>
         <View style={styles.profileContainer}>
         <Image source={require("../../images/water_avatar.jpg")} style={{ width: 120, height: 120, borderRadius: 60, marginBottom: 20 }} />

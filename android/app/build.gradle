@@ -7,7 +7,9 @@ project.ext.vectoricons = [
     iconFontNames: [ 'MaterialIcons.ttf' ]
 ]
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
-
+project.ext.react = [
+    enableHermes: false  // Hermes devre dışı bırakıldı
+]
 // React Native konfigürasyonu
 react {
     // Hermes toggle burada tanımlanmalı
@@ -68,3 +70,4 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services' // Burada doğru yerdesin
+0

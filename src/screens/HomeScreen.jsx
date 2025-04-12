@@ -21,10 +21,8 @@ const HomeScreen = ({route, navigation}) => {
   const [currentWater, setWater] = useState(0);
   const [loadWater, setLoadWater] = useState(false);  
  
-  // Animasyon değerleri:
-  const waterLevelAnim = useRef(new Animated.Value(0)).current; // Su seviyesi (yüzde olarak)
-  const waveAnim = useRef(new Animated.Value(0)).current; // Dalga kayması
-  // Farklı konumlarda baloncuklar için:
+  const waterLevelAnim = useRef(new Animated.Value(0)).current;
+  const waveAnim = useRef(new Animated.Value(0)).current;
   const bubbleAnim1 = useRef(new Animated.Value(0)).current;
   const bubbleAnim2 = useRef(new Animated.Value(0)).current;
   const bubbleAnim3 = useRef(new Animated.Value(0)).current;
@@ -62,7 +60,7 @@ const HomeScreen = ({route, navigation}) => {
   const fetchData = async () => {
     const data = await getData("userId");
     if (data !== null) {
-      setId(data)// Bu asenkron olduğu için getUser burada çağrılmamalı
+      setId(data)
       console.log("User ID:", data);
     }
   };
@@ -76,11 +74,11 @@ const HomeScreen = ({route, navigation}) => {
     
     const getCurrentHourAndDate = () => {
       const turkeyTime = new Date(getTurkeyTime());
-      const currentHour = turkeyTime.getHours();  // Saat
-      const currentMinute = turkeyTime.getMinutes();  // Dakika
-      const currentDay = turkeyTime.getDate();  // Gün
-      const currentMonth = turkeyTime.getMonth() + 1;  // Ay (0-11, 1 ekliyoruz)
-      const currentYear = turkeyTime.getFullYear();  // Yıl
+      const currentHour = turkeyTime.getHours();  
+      const currentMinute = turkeyTime.getMinutes();  
+      const currentDay = turkeyTime.getDate();  
+      const currentMonth = turkeyTime.getMonth() + 1;  
+      const currentYear = turkeyTime.getFullYear();  
       
       return {
         currentDay,
@@ -201,7 +199,6 @@ const HomeScreen = ({route, navigation}) => {
     startBubbleAnimation(bubbleAnim3, 1500, 4000, 240);
   }, []);
 
-  // Su seviyesini güncelleyen fonksiyon:
   const updateWater = () => {
     if (currentWater < targetWater) {
       const newWater = currentWater + 200;

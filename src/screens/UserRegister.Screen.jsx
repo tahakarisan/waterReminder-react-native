@@ -21,57 +21,61 @@ function UserRegisterScreen({navigation})
         const[weight,setWeight] = useState(null);
         const [gender, setGender] = useState("Male");
         const signUp = async () => {
-            try {
-                const userCredential = await auth().createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-        
-                // Settings verisi
-                await database()
-                    .ref(`settings/${user.uid}`)
-                    .set({
-                        userId: user.uid,
-                        dailyGoal: 2000,
-                        starterTime: 9.00,
-                        endTime: 23.00,
-                        notificationFrequency: 60,
-                        notificationStatus: true,
-                    });
-        
-                console.log("Ayarlar başarıyla kaydedildi!");
-        
-                // Kullanıcı bilgileri (şifresiz!)
-                await database()
-                    .ref(`users/${user.uid}`)
-                    .set({
-                        name: name,
-                        email: email,
-                        age: age,
-                        weight: weight,
-                        gender: gender,
-                    });
-        
-                console.log("Kullanıcı bilgileri başarıyla kaydedildi!");
-        
-                // Otomatik giriş yap
-                await auth().signInWithEmailAndPassword(email, password);
-        
-                console.log("Giriş başarılı!");
-        
-                // AsyncStorage ile UID kaydetmek istersen:
-                await AsyncStorage.setItem("userId", user.uid);
-        
-                // Ana sayfaya yönlendir
-                navigation.navigate("HomeMain", user.uid);
-        
-            } catch (error) {
-                if (error.code === 'auth/email-already-in-use') {
-                    console.log('Bu e-posta adresi zaten kullanımda!');
-                } else if (error.code === 'auth/invalid-email') {
-                    console.log('Geçersiz e-posta adresi!');
-                } else {
-                    console.error('Genel hata:', error);
+            if(!name || !age || !weight || !password || !email || !gender){
+                try {
+                    const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+            
+                    // Settings verisi
+                    await database()
+                        .ref(`settings/${user.uid}`)
+                        .set({
+                            userId: user.uid,
+                            dailyGoal: 2000,
+                            starterTime: 9.00,
+                            endTime: 23.00,
+                            notificationFrequency: 60,
+                            notificationStatus: true,
+                        });
+            
+                    console.log("Ayarlar başarıyla kaydedildi!");
+            
+                    // Kullanıcı bilgileri (şifresiz!)
+                    await database()
+                        .ref(`users/${user.uid}`)
+                        .set({
+                            name: name,
+                            email: email,
+                            age: age,
+                            weight: weight,
+                            gender: gender,
+                        });
+            
+                    console.log("Kullanıcı bilgileri başarıyla kaydedildi!");
+            
+                    // Otomatik giriş yap
+                    await auth().signInWithEmailAndPassword(email, password);
+            
+                    console.log("Giriş başarılı!");
+            
+                    // AsyncStorage ile UID kaydetmek istersen:
+                    await AsyncStorage.setItem("userId", user.uid);
+            
+                    // Ana sayfaya yönlendir
+                    navigation.navigate("HomeMain", user.uid);
+                        
+                }
+                catch (error) {
+                    if (error.code === 'auth/email-already-in-use') {
+                        console.log('Bu e-posta adresi zaten kullanımda!');
+                    } else if (error.code === 'auth/invalid-email') {
+                        console.log('Geçersiz e-posta adresi!');
+                    } else {
+                        console.error('Genel hata:', error);
+                    }
                 }
             }
+             
         };
         
             
