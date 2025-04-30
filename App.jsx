@@ -8,6 +8,10 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import ProfileScreen from './src/screens/ProfileScreen'
 import UserRegisterScreen from './src/screens/UserRegister.Screen'; // Hata düzeltilmiş
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import "./src/screens/services/firebase";
+import notificationService from './src/services/notificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ref, getDatabase, get } from 'firebase/database';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -83,6 +87,41 @@ function MainTabs() {
 
 // Ana Uygulama Bileşeni
 export default function App() {
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        // Bildirim izni iste
+        await notificationService.requestNotificationPermission();
+        
+        // Kullanıcı ID'sini al
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+
+        // Firebase'den bildirim ayarlarını al
+        const db = getDatabase();
+        const settingsRef = ref(db, `settings/${userId}/notifications`);
+        const snapshot = await get(settingsRef);
+        const settings = snapshot.val();
+
+        if (settings && settings.isEnabled && settings.frequency) {
+          // Bildirim sıklığını ayarla
+          await notificationService.scheduleNextNotification(settings.frequency);
+          // AsyncStorage'a kaydet
+          await AsyncStorage.setItem('notificationInterval', settings.frequency.toString());
+        }
+      } catch (error) {
+        console.error('Bildirim ayarları yüklenirken hata:', error);
+      }
+    };
+
+    initializeNotifications();
+
+    // Cleanup fonksiyonu
+    return () => {
+      notificationService.cleanup();
+    };
+  }, []);
+
   return (
     <NavigationContainer>
       <MainTabs />

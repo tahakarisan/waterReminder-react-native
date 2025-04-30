@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import database, { get } from '@react-native-firebase/database';
-
-const ProfileScreen = () => {
+import styles from "./styles/profileStyle"
+const ProfileScreen = ({navigation}) => {
   const [parsedData, setData] = useState(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -25,15 +25,14 @@ const ProfileScreen = () => {
     const reference = database().ref('/users/' + parsedData);
     const onValueChange = reference.on('value', snapshot => {
       const data = snapshot.val();
-      if (data) {
-        setName(data.name);
-        setEmail(data.email);
-        setAge(data.age);
-        setWeight(data.weight);
+      if (data) 
+      {
+          setName(data.name);
+          setEmail(data.email);
+          setAge(data.age);
+          setWeight(data.weight);
       }
     });
-  
-    // Component unmount olduğunda listener'ı kaldır
     return () => reference.off('value', onValueChange);
   };
   useEffect(() => {
@@ -64,12 +63,18 @@ const ProfileScreen = () => {
       console.error('Veriler kaydedilirken hata oluştu:', error);
     }
   };
-
+  const navigateProfile = ()=>{
+    setIsEditing(false);
+    navigation.navigate("Profile")
+  }
   return (
     
     <View style={styles.mainContainer}>
       {isEditing ? (
         <>
+        <TouchableOpacity style={styles.route} onPress={navigateProfile}>
+        <Text style={{color:"#2196F3",fontSize:20,fontWeight:"bold"}}>Geri Dön</Text>
+        </TouchableOpacity>
         <Image source={require("../../images/water_avatar.jpg")} style={{width: 120, height: 120, borderRadius: 60, marginBottom: 20 }} />
           <View style={styles.inputContainer}>
           <TextInput style={styles.input} value={name} placeholderTextColor="black" onChangeText={setName} placeholder="Ad" />
@@ -109,10 +114,9 @@ const ProfileScreen = () => {
         </View>
         <View style={styles.profileInfo}>
           <Text style={styles.profileText}>Yaş:</Text>
-          <Text style={styles.text}>{age} kg</Text>
+          <Text style={styles.text}>{age} Yaş</Text>
         </View>
       </View>
-
       <TouchableOpacity style={styles.button} onPress={() => setIsEditing(true)}>
         <Text style={styles.buttonText}>Düzenle</Text>
       </TouchableOpacity>
@@ -123,116 +127,4 @@ const ProfileScreen = () => {
     </View>
   );
 };
-
-const styles = {
-  mainContainer: {
-    marginTop:80,
-    padding: 20,
-    backgroundColor: "#f4f4f4",
-    borderRadius: 10,
-    alignItems: "center",
-    width: "90%",
-    height:400,
-    alignSelf: "center",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  container: {
-    marginTop:80,
-    padding: 20,
-    backgroundColor: "#f4f4f4",
-    borderRadius: 10,
-    alignItems: "center",
-    width: "90%",
-    height:400,
-    alignSelf: "center",
-    elevation: 3, // Android gölgelendirme
-    shadowColor: "#000", // iOS gölgelendirme
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  editContainer: {
-    marginTop:80,
-    padding: 20,
-    backgroundColor: "#f4f4f4",
-    borderRadius: 10,
-    alignItems: "center",
-    width: "80%",
-    height:400,
-    alignSelf: "center",
-    elevation: 3, // Android gölgelendirme
-    shadowColor: "#000", // iOS gölgelendirme
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  infoContainer: {
-    width: "100%",
-    gap: 10, // Bileşenler arasına boşluk bırakır (React Native 0.71+)
-  },
-  profileInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 8,
-    shadowColor: "#ccc",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-  },
-  profileText: {
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#555",
-  },
-  profileTitleText: {
-    fontWeight: "bold",
-    fontSize: 24,
-    color: "#555",
-    textAlign:"center",
-    marginBottom:-40,
-  },
-  text: {
-    marginTop:3,
-    fontSize: 13,
-    color: "#333",
-  },
-  button: {
-    marginTop: 50,
-    backgroundColor: "#007AFF",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginVertical: 4,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3, // Android gölgelendirme
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: "#333",
-  },
-};
-
 export default ProfileScreen;

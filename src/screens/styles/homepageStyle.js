@@ -1,0 +1,143 @@
+import { StyleSheet } from "react-native";
+const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#fff",
+      alignItems: "center",
+      paddingTop: 40,
+    },
+    center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: "#1976D2",
+      marginBottom: 20,
+    },
+    waterContainer: {
+      width: 200,
+      height: 400,
+      backgroundColor: "#E3F2FD",
+      borderRadius: 10,
+      overflow: "hidden",
+      position: "relative",
+      justifyContent: "flex-end",
+      alignItems: "center",
+      marginBottom: 30,
+    },
+    waterLevel: {
+      width: "100%",
+      backgroundColor: "#1976D2",
+      position: "absolute",
+      bottom: 0,
+    },
+    wave: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: 200,
+      height: 30,
+      backgroundColor: "rgba(255, 255, 255, 0.3)",
+      borderBottomLeftRadius: 100,
+      borderBottomRightRadius: 100,
+    },
+    waterText: {
+      marginTop:180,
+      position: "absolute",
+      top: 20,
+      fontSize: 24,
+      fontWeight: "bold",
+      color: "#fff",
+      zIndex: 10,
+    },
+    bubble: {
+      position: "absolute",
+      bottom: 10,
+      width: 10,
+      height: 10,
+      backgroundColor: "rgba(255, 255, 255, 0.8)",
+      borderRadius: 10,
+    },
+    button: {
+      backgroundColor: "#1976D2",
+      paddingVertical: 15,
+      paddingHorizontal: 40,
+      borderRadius: 10,
+      width:300,
+      marginBottom:20,
+    },
+    buttonText: {
+      color: "#fff",
+      fontSize: 18,
+      fontWeight: "600",
+      textAlign:"center"
+    },
+    textContainer: {
+      alignItems: "center",
+    },
+    welcomeText: {
+      fontSize: 32,
+      fontWeight: "bold",
+      color: "black",
+      marginTop:130,
+      marginBottom: 10,
+    },
+    text: {
+      fontSize: 20,
+      color: "#1976D2",
+      textAlign: "center",
+      marginBottom: 20,
+    },
+    modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  input: {
+    width: '100%',
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    padding: 10,
+    borderRadius: 5,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#ccc',
+  },
+  confirmButton: {
+    backgroundColor: '#1976D2',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  });
+  export default styles;

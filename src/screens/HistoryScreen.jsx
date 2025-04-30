@@ -1,145 +1,174 @@
-import React, {useState,useEffect} from 'react';
-import {View, Text, StyleSheet,FlatList,Image,ActivityIndicator,Button} from 'react-native';
-import { initializeDatabase } from './database/database';
-import { addReminder, getReminders, deleteReminder } from './services/ReminderService';
-import database from '@react-native-firebase/database';
+import React, {useState, useEffect} from 'react';
+import { StyleSheet, Alert } from 'react-native';
+import {
+  View, 
+  Text, 
+  FlatList,
+  Image,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
+import { ref, getDatabase, onValue, enableIndexedDbPersistence, set, serverTimestamp } from 'firebase/database';
+import { database } from '../services/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-  
+import styles from './styles/history';
+import NetInfo from '@react-native-community/netinfo';
 
-const HistoryScreen = ({navigation}) => {
-    const [parsedData, setData] = useState(null);
-    const [name, setName] = useState('');
-    const [age, setAge] = useState('');
-    function routeUserForm(){
-      navigation.navigate("UserRegister")
-    }
-    const [reminders, setReminders] = useState([]);
+const HistoryScreen = () => {
+  const [userData, setUserData] = useState(null);
+  const [waterLogs, setWaterLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [totalWater, setTotalWater] = useState(0);
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    initializeDatabase(); 
-    fetchReminders(); 
-  },[]);
-  const getData = async (key) => {
-    try {
-      const value = await AsyncStorage.getItem(key);
-      return value ? value : null; 
-    } catch (error) {
-      console.error("Veri okunurken hata oluştu:", error);
-      return null;
-    }
-  }
-  const getUser = () => {
-    const reference = database().ref('/users/'+ parsedData);
-    const onValueChange = reference.on('value', snapshot => {
-      const data = snapshot.val();
-      if (data) {
-        setName(data.name);
-        setAge(data.age);
-      }
+    setupRealtimeListeners();
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOnline(state.isConnected);
     });
-  
-    // Component unmount olduğunda listener'ı kaldır
-    return () => reference.off('value', onValueChange);
-  };
-  useEffect(() => {
-    if (parsedData) {
-      getUser();
+
+    return () => unsubscribe();
+  }, []);
+
+  const setupRealtimeListeners = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      const db = getDatabase();
+      
+      // Kullanıcı bilgileri için realtime listener
+      const userRef = ref(db, `users/${userId}`);
+      onValue(userRef, (snapshot) => {
+        const userData = snapshot.val();
+        if (userData) {
+          setUserData(userData);
+        }
+      });
+
+      // Su kayıtları için realtime listener
+      const today = new Date();
+      const dateKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+      const waterRef = ref(db, `users/${userId}/waterIntake/${dateKey}`);
+      
+      onValue(waterRef, (snapshot) => {
+        const waterData = snapshot.val();
+        if (waterData) {
+          // Logları tersine çevirip en son içileni en üstte göster
+          const logs = waterData.logs || [];
+          setWaterLogs([...logs].reverse());
+          setTotalWater(waterData.totalWater || 0);
+        } else {
+          setWaterLogs([]);
+          setTotalWater(0);
+        }
+        setLoading(false);
+      });
+
+    } catch (error) {
+      console.error('Realtime veri dinlemede hata:', error);
+      setLoading(false);
     }
-  }, [parsedData]);
-  const fetchReminders = async () => {
-    const data = await getReminders();
-    setReminders(data);
   };
 
-  const handleAddReminder = async () => {
-    await addReminder('08:00 AM', 250);
-    fetchReminders(); // Listeyi güncelle
+  const onRefresh = () => {
+    setRefreshing(true);
+    setupRealtimeListeners();
+    setRefreshing(false);
   };
 
-  const handleDeleteReminder = async id => {
-    await deleteReminder(id);
-    fetchReminders();
-  };
-  const fetchData = async () => {
-    const data = await getData("userId");
-    if (data !== null) {
-      setData(data); // Bu asenkron olduğu için getUser burada çağrılmamalı
-      console.log("User ID:", data);
-    }
-  };
-  useEffect(() => {
-    fetchData();
-  },[])
-
-  return (
-    <View>
-      <View style={styles.userInfoContainer}>
-      <Image source={require("../../images/water_avatar.jpg")} style={{marginLeft:30,marginTop:20, width: 70, height: 70, borderRadius: 60, marginBottom: 5 }} />
-      <Text style={styles.name}>{name}</Text>
-      <Text style={styles.age}>{age} Yaş</Text>
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1976D2" />
       </View>
-      <View style={styles.container}>
-        <Text style={styles.text}>Su Kayıtları</Text>
+    );
+  }
+
+  const renderWaterLog = ({ item, index }) => (
+    <View style={styles.logItem}>
+      <View style={styles.logTime}>
+        <Text style={styles.timeText}>{item.time}</Text>
+      </View>
+      <View style={styles.logAmount}>
+        <Text style={styles.amountText}>+{item.amount} ml</Text>
       </View>
     </View>
   );
-}
-;
 
-const styles = StyleSheet.create({
-  userInfoContainer: {
-    flexDirection: "row",
-    marginTop: 20,
-    marginLeft: 10,
-    marginRight: 10,
-    borderRadius: 13,
-    borderColor: "#2196F3",
-    borderWidth: 1,
-    paddingTop: 10,
-    paddingBottom: 10,
-    
-    shadowColor: "#2196F3",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  
-    elevation: 3,
-  },
-  
-  name:{
-    marginTop:30,
-    marginLeft:20,
-    fontSize:22,
-    color:"#2196F3",
-    fontWeight:"bold",
-  },
-  age:{
-    marginTop:30,
-    marginLeft:50,
-    fontSize:22,
-    color:"#2196F3",
-    fontWeight:"bold",
-  },
-  container: {
-    alignItems: 'center',
-  },
-  text:{
-    marginTop: 30,
-    fontSize: 28,
-    color: '#2196F3',
-    marginBottom: 10,
-    fontWeight: 'bold',
-    
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2196F3',
-    marginBottom: 20,
-  },
-});
+  return (
+    <View style={styles.container}>
+      {!isOnline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineText}>
+            Çevrimdışı mod - Verileriniz internet bağlantısı sağlandığında güncellenecek
+          </Text>
+        </View>
+      )}
+      {/* Profil Kartı */}
+      <View style={styles.profileCard}>
+        <Image 
+          source={require("../../images/water_avatar.jpg")} 
+          style={styles.avatar} 
+        />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{userData?.name || 'Kullanıcı'}</Text>
+          <Text style={styles.userDetails}>
+            {userData?.age} yaş
+          </Text>
+        </View>
+      </View>
+
+      {/* Günlük Özet */}
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>Bugünkü Su Tüketimi</Text>
+        <Text style={styles.summaryAmount}>
+          {totalWater} ml
+        </Text>
+        <View style={styles.targetInfo}>
+          <Text style={styles.targetText}>
+            Hedef: {userData?.settings?.targetWater || 2000} ml
+          </Text>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${Math.min((totalWater / (userData?.settings?.targetWater || 2000)) * 100, 100)}%` }
+              ]} 
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* Su İçme Kayıtları */}
+      <View style={styles.logsContainer}>
+        <Text style={styles.logsTitle}>Günlük Su İçme Kayıtları</Text>
+        <FlatList
+          data={waterLogs}
+          renderItem={renderWaterLog}
+          keyExtractor={(_, index) => index.toString()}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#1976D2"]}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                Bugün henüz su içme kaydınız bulunmuyor.
+              </Text>
+            </View>
+          }
+        />
+      </View>
+    </View>
+  );
+};
 
 export default HistoryScreen;

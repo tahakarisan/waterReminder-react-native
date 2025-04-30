@@ -7,13 +7,14 @@ project.ext.vectoricons = [
     iconFontNames: [ 'MaterialIcons.ttf' ]
 ]
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
 project.ext.react = [
-    enableHermes: false  // Hermes devre dışı bırakıldı
+    enableHermes: true  // Hermes aktif
 ]
+
 // React Native konfigürasyonu
 react {
-    // Hermes toggle burada tanımlanmalı
-    hermesEnabled = false // true yapabilirsin istersen
+    hermesEnabled = true
     autolinkLibrariesWithApp()
 }
 
@@ -22,9 +23,7 @@ def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
     namespace "com.waterreminder"
-    ndkVersion rootProject.ext.ndkVersion
-    compileSdk rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
         applicationId "com.waterreminder"
@@ -53,21 +52,38 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.core:core:1.12.0'
+            force 'androidx.core:core-ktx:1.12.0'
+            exclude group: 'com.android.support', module: 'support-compat'
+        }
+    }
 }
 
 dependencies {
-    // Firebase BOM
-    implementation platform("com.google.firebase:firebase-bom:33.12.0")
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-messaging")
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "com.facebook.react:react-native:+"
+    implementation "androidx.core:core:1.12.0"
+    implementation "androidx.core:core-ktx:1.12.0"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:33.11.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-messaging'
+
+    // Google Login için (opsiyonel)
+    implementation 'com.google.android.gms:play-services-auth:21.3.0'
 
     // Hermes veya JSC seçimi
-    if (project.ext.react.hermesEnabled) {  // Burada doğru kontrolü sağladık
+    if (project.ext.react.enableHermes) {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
     }
 }
 
-apply plugin: 'com.google.gms.google-services' // Burada doğru yerdesin
-0
+// Google Services plugin aktif
+apply plugin: 'com.google.gms.google-services'

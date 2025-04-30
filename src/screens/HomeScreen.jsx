@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import database, { get } from '@react-native-firebase/database';
+import {database} from "./services/firebase"; // Firebase'i başlat
+import { ref,getDatabase,set, onValue, get } from 'firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import styles from "./styles/homepageStyle";
 import {
   View,
   Text,
@@ -10,44 +12,99 @@ import {
   Animated,
   Easing,
   Image,
+  Alert,
+  RefreshControl,
+  TextInput,
+  Modal
 } from "react-native";
+import notificationService from '../services/notificationService';
 
 const HomeScreen = ({route, navigation}) => {
+  const [refreshing, setRefreshing] = useState(false);
   const userId = route.params;
-  const [id , setId] = useState(userId);
+  const [id, setId] = useState(userId);
   const [isLoading, setIsLoading] = useState(false);
   const [userExists, setUserExists] = useState(false);
-  const targetWater = 2000;
+  const [targetWater, setTargetWater] = useState(2000);
   const [currentWater, setWater] = useState(0);
-  const [loadWater, setLoadWater] = useState(false);  
- 
+  const [loadWater, setLoadWater] = useState(false);
+  const [glassSize, setGlassSize] = useState(200); // Varsayılan bardak boyutu
+  const [showGlassSizeModal, setShowGlassSizeModal] = useState(false);
+  const [newGlassSize, setNewGlassSize] = useState('');
+
+  // Animasyon değerleri
   const waterLevelAnim = useRef(new Animated.Value(0)).current;
   const waveAnim = useRef(new Animated.Value(0)).current;
   const bubbleAnim1 = useRef(new Animated.Value(0)).current;
   const bubbleAnim2 = useRef(new Animated.Value(0)).current;
   const bubbleAnim3 = useRef(new Animated.Value(0)).current;
 
-  
+  const getTargetWater = async()=>{
+    if (!id) {
+      Alert.alert("Hata", "Kullanıcı Bilgisi Bulunamadı");
+      return;
+    }
+
+    try {
+      const db = getDatabase();
+      const targetRef = ref(db, `settings/${id}/targetWater`);
+      const snapshot = await get(targetRef);
+      const targetWater = snapshot.val();
+
+      if (targetWater) {
+        await setTargetWater(targetWater);
+
+      } else {
+        console.log("Hata");
+      }
+    } catch (error) {
+      console.error("Ayarlar yüklenirken hata:", error);
+      Alert.alert(
+        "Hata",
+      );
+    }
+
+  }
+  const onRefresh = () => {
+    setRefreshing(true);
+    setupRealtimeListeners();
+    setRefreshing(false);
+  };
+  // Firebase'den su verisini çekme
   const getCurrentWater = () => {
-    const reference = database().ref(`/userWaterInfo/${id}`);
-  
-    const onValueChange = reference.on('value', snapshot => {
+    // Bugünün tarihini al
+    const today = new Date();
+    const dateKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    
+    // Doğru referans yolu
+    const waterRef = ref(database, `users/${id}/waterIntake/${dateKey}`);
+    
+    const unsubscribe = onValue(waterRef, (snapshot) => {
       const data = snapshot.val();
-      if (data && data.waterIntake !== undefined) {
-        const value = data.waterIntake;
+      
+      if (data?.totalWater !== undefined) { // waterIntake yerine totalWater kontrolü
+        const value = data.totalWater;
         setWater(value);
-  
-        // 💧 Animasyonu da burada başlat
+        
         Animated.timing(waterLevelAnim, {
           toValue: (value / targetWater) * 100,
           duration: 500,
           useNativeDriver: false,
         }).start();
       }
+      
+      setLoadWater(true);
+    }, (error) => {
+      console.error("Su verisi çekilirken hata:", error);
+      setLoadWater(true);
     });
   
-    return () => reference.off('value', onValueChange);
+    return unsubscribe;
   };
+  useEffect(() => {
+    const unsubscribe = getCurrentWater();
+    return () => unsubscribe(); // Component kaldırıldığında dinleyiciyi temizle
+  }, [id]); // id değiştiğinde yeniden çalışır
   const getData = async (key) => {
     try {
       const value = await AsyncStorage.getItem(key);
@@ -64,40 +121,51 @@ const HomeScreen = ({route, navigation}) => {
       console.log("User ID:", data);
     }
   };
-  
-  const setWaterIntake = async (waterLevel) => {
-    const getTurkeyTime = () => {
-      const options = { timeZone: 'Europe/Istanbul', hour12: false };
-      const turkeyDate = new Date().toLocaleString('en-US', options);
-      return turkeyDate;
-    };
-    
-    const getCurrentHourAndDate = () => {
-      const turkeyTime = new Date(getTurkeyTime());
-      const currentHour = turkeyTime.getHours();  
-      const currentMinute = turkeyTime.getMinutes();  
-      const currentDay = turkeyTime.getDate();  
-      const currentMonth = turkeyTime.getMonth() + 1;  
-      const currentYear = turkeyTime.getFullYear();  
-      
-      return {
-        currentDay,
-        currentMonth,
-        currentYear,
-        currentHour,
-        currentMinute
-      };
-    };
-    
-    const { currentDay, currentMonth, currentYear, currentHour, currentMinute } = getCurrentHourAndDate();
-      const reference  = database().ref(`/userWaterInfo/${id}`);
-      reference.set({
-        date: {currentDay:
-          currentDay,currentMonth:currentMonth,currentYear: currentYear,currentHour:currentHour,currentMinute:
-           currentMinute},
-        waterIntake: waterLevel,
-      })
+
+const setWaterIntake = async (waterLevel) => {
+  if (!id) {
+    console.error("Kullanıcı ID'si bulunamadı!");
+    return;
   }
+
+  try {
+    // Günün tarihini al
+    const today = new Date();
+    const dateKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    
+    // Database referansını al
+    const db = getDatabase();
+    const waterRef = ref(db, `users/${id}/waterIntake/${dateKey}`);
+    
+    // Mevcut veriyi kontrol et
+    const snapshot = await get(waterRef);
+    const currentData = snapshot.val() || {};
+    
+    // Yeni kayıt
+    const newData = {
+      lastUpdate: new Date().toISOString(),
+      totalWater: waterLevel,
+      logs: [
+        ...(currentData.logs || []),
+        {
+          time: new Date().toLocaleTimeString('tr-TR'),
+          amount: 200, // Her tıklamada eklenen miktar
+        }
+      ]
+    };
+
+    // Veriyi güncelle
+    await set(waterRef, newData);
+    
+  } catch (error) {
+    console.error("Su seviyesi güncellenirken hata:", error);
+    Alert.alert(
+      "Hata",
+      "Veriler kaydedilirken bir ssorun oluştu. Lütfen internet bağlantınızı kontrol edin."
+    );
+    throw error;
+  }
+};
 
   useEffect(() => {
     fetchData();
@@ -124,7 +192,8 @@ const HomeScreen = ({route, navigation}) => {
   }, []); // İlk açılışta çalışacak
   useEffect(() => {
     if (id) {getCurrentWater();  
-}}, [id]); // id değiştiğinde tekrar veri çek,
+    getTargetWater();  
+  }}, [id]); // id değiştiğinde tekrar veri çek,
   useEffect(() => {
     const getUserData = async () => {
       setIsLoading(true);
@@ -156,8 +225,6 @@ const HomeScreen = ({route, navigation}) => {
       setUserExists(false);
       setIsLoading(false);
     }
-    
-    
   }, [userId]);
 
   // Dalga animasyonu: dalganın yatay kayması
@@ -193,22 +260,78 @@ const HomeScreen = ({route, navigation}) => {
   };
 
   useEffect(() => {
-      
     startBubbleAnimation(bubbleAnim1, 500, 3000, 200);
     startBubbleAnimation(bubbleAnim2, 1000, 3500, 220);
     startBubbleAnimation(bubbleAnim3, 1500, 4000, 240);
   }, []);
 
-  const updateWater = () => {
-    if (currentWater < targetWater) {
-      const newWater = currentWater + 200;
-      setWater(newWater);
-      setWaterIntake(newWater);
+  const calculateWaterPercentage = (current, target) => {
+    return Math.min(100, Math.round((current / target) * 100));
+  };
+
+  const updateWater = async () => {
+    if (!id) {
+      Alert.alert("Hata", "Kullanıcı Bilgisi Bulunamadı");
+      return;
+    }
+
+    try {
+      const newWater = Math.min(targetWater, currentWater + glassSize); // Sabit 250 yerine glassSize kullan
+      const percentage = calculateWaterPercentage(newWater, targetWater);
+      
+      // Firebase'i güncelle
+      await setWaterIntake(newWater);
+
+      // Bildirim servisini güncelle
+      await notificationService.saveLastDrinkTime();
+      
+      // Su seviyesi animasyonunu güncelle
       Animated.timing(waterLevelAnim, {
-        toValue: (newWater / targetWater) * 100,
+        toValue: percentage,
         duration: 500,
         useNativeDriver: false,
       }).start();
+
+      setWater(newWater);
+
+      if (newWater >= targetWater) {
+        Alert.alert("Tebrikler!", "Günlük su hedefinize ulaştınız! 🎉");
+      }
+    } catch (error) {
+      console.error("Su miktarı güncellenirken hata:", error);
+      Alert.alert("Hata", "Su miktarı güncellenirken bir sorun oluştu");
+    }
+  };
+
+  useEffect(() => {
+    const getTargetWater = async () => {
+      try {
+        const savedTarget = await AsyncStorage.getItem('targetWater');
+        if (savedTarget) {
+          setTargetWater(parseInt(savedTarget));
+        }
+      } catch (error) {
+        console.error("Hedef su miktarı alınırken hata:", error);
+      }
+    };
+
+    getTargetWater();
+  }, []);
+
+  const changeGlassSize = () => {
+    setNewGlassSize(glassSize.toString());
+    setShowGlassSizeModal(true);
+  };
+
+  const handleGlassSizeChange = () => {
+    const size = parseInt(newGlassSize);
+    if (!isNaN(size) && size >= 200 && size<400) {
+      setGlassSize(size);
+      setShowGlassSizeModal(false);
+      Alert.alert("Başarılı", `Bardak boyutu ${size}ml olarak ayarlandı`);
+    } 
+    else {
+      Alert.alert("Hata", "Lütfen geçerli bir sayı girin");
     }
   };
 
@@ -256,14 +379,50 @@ const HomeScreen = ({route, navigation}) => {
               style={[styles.bubble, { left: "75%", transform: [{ translateY: bubbleAnim3 }] }]}
             />
             {/* Su yüzdesi metni */}
-            <Text style={styles.waterText}>{Math.round((currentWater / targetWater) * 100)}%</Text>
+            <Text style={styles.waterText}>
+              {calculateWaterPercentage(currentWater, targetWater)}%
+            </Text>
           </View>
           <TouchableOpacity style={styles.button} onPress={updateWater}>
-            <Text style={styles.buttonText}>💧 Su İç</Text>
+            <Text style={styles.buttonText}>💧 Su İç ({glassSize}ml)</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={()=>{}}>
-            <Text style={styles.buttonText}>🥤 Bardak Değiştir</Text>
+          <TouchableOpacity style={styles.button} onPress={changeGlassSize}>
+            <Text style={styles.buttonText}>🥤 Bardak  Değiştir</Text>
           </TouchableOpacity>
+
+          <Modal
+            visible={showGlassSizeModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowGlassSizeModal(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Bardak Boyutu</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={newGlassSize}
+                  onChangeText={setNewGlassSize}
+                  placeholder="Bardak boyutunu ml cinsinden girin"
+                />
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity 
+                    style={[styles.modalButton, styles.cancelButton]} 
+                    onPress={() => setShowGlassSizeModal(false)}
+                  >
+                    <Text style={styles.modalButtonText}>İptal</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.modalButton, styles.confirmButton]} 
+                    onPress={handleGlassSizeChange}
+                  >
+                    <Text style={styles.modalButtonText}>Tamam</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </>
       ) : (
         <View style={styles.textContainer}>
@@ -279,98 +438,5 @@ const HomeScreen = ({route, navigation}) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    paddingTop: 40,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1976D2",
-    marginBottom: 20,
-  },
-  waterContainer: {
-    width: 200,
-    height: 400,
-    backgroundColor: "#E3F2FD",
-    borderRadius: 10,
-    overflow: "hidden",
-    position: "relative",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  waterLevel: {
-    width: "100%",
-    backgroundColor: "#1976D2",
-    position: "absolute",
-    bottom: 0,
-  },
-  wave: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: 200,
-    height: 30,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderBottomLeftRadius: 100,
-    borderBottomRightRadius: 100,
-  },
-  waterText: {
-    marginTop:180,
-    position: "absolute",
-    top: 20,
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    zIndex: 10,
-  },
-  bubble: {
-    position: "absolute",
-    bottom: 10,
-    width: 10,
-    height: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    borderRadius: 10,
-  },
-  button: {
-    backgroundColor: "#1976D2",
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-    width:300,
-    marginBottom:20,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign:"center"
-  },
-  textContainer: {
-    alignItems: "center",
-  },
-  welcomeText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "black",
-    marginTop:130,
-    marginBottom: 10,
-  },
-  text: {
-    fontSize: 20,
-    color: "#1976D2",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-});
 
 export default HomeScreen;
