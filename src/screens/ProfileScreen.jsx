@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 import database, { get } from '@react-native-firebase/database';
 import styles from "./styles/profileStyle"
 const ProfileScreen = ({navigation}) => {
   const [parsedData, setData] = useState(null);
+  const [dataLoaded,setState] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [age, setAge] = useState('');
@@ -33,6 +35,7 @@ const ProfileScreen = ({navigation}) => {
           setWeight(data.weight);
       }
     });
+    setState(true);
     return () => reference.off('value', onValueChange);
   };
   useEffect(() => {
@@ -40,6 +43,7 @@ const ProfileScreen = ({navigation}) => {
       const data = await getData("userId");
       if (data !== null) {
         setData(data); // Bu asenkron olduğu için getUser burada çağrılmamalı
+        
         console.log("User ID:", data);
       }
     };
@@ -67,13 +71,52 @@ const ProfileScreen = ({navigation}) => {
     setIsEditing(false);
     navigation.navigate("Profile")
   }
+
+  const confirmLogout = () => {
+  Alert.alert(
+    'Çıkış Yap',
+    'Hesabınızdan çıkmak istediğinize emin misiniz?',
+    [
+      {
+        text: 'İptal',
+        style: 'cancel',
+      },
+      {
+        text: 'Çıkış Yap',
+        style: 'destructive',
+        onPress: () => logOut(),
+      },
+    ],
+    { cancelable: true }
+  );
+  };
+    const logOut= async()=>{
+      try {
+        const res = await AsyncStorage.removeItem("userId")
+        const method = await AsyncStorage.removeItem("userLoggedIn")
+          Alert.alert("Çıkış Başarıyla Yapıldı");
+          console.log(response);
+          navigation.navigate("HomeMain");
+      }
+      catch (error) {
+        Alert.alert("Hata Oluştu");
+        console.log("Hata",error);
+      }
+     
+    }
+
+  if(dataLoaded==false){
+    return(
+      <ActivityIndicator style={{alignItems:"center"}} size="large" color="#00ff00"/>
+    )
+  }
   return (
     
     <View style={styles.mainContainer}>
       {isEditing ? (
         <>
         <TouchableOpacity style={styles.route} onPress={navigateProfile}>
-        <Text style={{color:"#2196F3",fontSize:20,fontWeight:"bold"}}>Geri Dön</Text>
+          <Text style={{color:"#2196F3",fontSize:20,fontWeight:"bold",width:200}}>Geri Dön</Text>
         </TouchableOpacity>
         <Image source={require("../../images/water_avatar.jpg")} style={{width: 120, height: 120, borderRadius: 60, marginBottom: 20 }} />
           <View style={styles.inputContainer}>
@@ -95,7 +138,10 @@ const ProfileScreen = ({navigation}) => {
        ) : (
         <>
         <View style={styles.profileContainer}>
-        <Image source={require("../../images/water_avatar.jpg")} style={{ width: 120, height: 120, borderRadius: 60, marginBottom: 20 }} />
+        <View style={{alignItems:"center"}}>
+          <Image source={require("../../images/water_avatar.jpg")} style={{ width: 120, height: 120, borderRadius: 60, marginBottom: 20 }} />
+        </View>
+        
         <Text style={styles.profileTitleText}>{name}</Text>
           </View>
           <View style={styles.container}>
@@ -117,9 +163,15 @@ const ProfileScreen = ({navigation}) => {
           <Text style={styles.text}>{age} Yaş</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.button} onPress={() => setIsEditing(true)}>
-        <Text style={styles.buttonText}>Düzenle</Text>
-      </TouchableOpacity>
+      <View style={innerStyles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={()=>{setIsEditing(true)}}>
+          <Text style={styles.buttonText}>Düzenle</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.errorButton} onPress={confirmLogout}>
+          <Text style={styles.buttonText}>Çıkış Yap</Text>
+        </TouchableOpacity>
+      </View>
+
     </View>
           
         </>
@@ -127,4 +179,10 @@ const ProfileScreen = ({navigation}) => {
     </View>
   );
 };
+
+const innerStyles = StyleSheet.create({
+  buttonContainer:{
+    flexDirection:"row",
+  },
+})
 export default ProfileScreen;

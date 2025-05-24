@@ -18,9 +18,6 @@ const styles = StyleSheet.create({
         width: "90%",
         height:400,
         alignSelf: "center",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
       },
       container: {
         marginTop:80,
@@ -31,11 +28,6 @@ const styles = StyleSheet.create({
         width: "90%",
         height:400,
         alignSelf: "center",
-        elevation: 3, // Android gölgelendirme
-        shadowColor: "#000", // iOS gölgelendirme
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
       },
       editContainer: {
         marginTop:80,
@@ -87,6 +79,14 @@ const styles = StyleSheet.create({
       button: {
         marginTop: 50,
         backgroundColor: "#007AFF",
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 8,
+      },
+      errorButton: {
+        marginTop: 50,
+        backgroundColor: "#B00020",
+        marginLeft:12,
         paddingVertical: 12,
         paddingHorizontal: 30,
         borderRadius: 8,
