@@ -104,6 +104,35 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 22 : 18,
     fontWeight: 'bold',
   },
+  typeSettingContainer:{
+        flexDirection: "row",
+        justifyContent:"space-evenly",
+        alignItems:"center",
+  },
+  typeClasic:{
+    padding:10,
+    alignItems:"center",
+    backgroundColor:'#E3F2FD',
+    width:Dimensions.get('window').width / 2.5, 
+    height:Dimensions.get('window').height / 20, 
+  },
+  typeClever:{
+    padding:10,
+    alignItems:"center",
+    backgroundColor:'#E3F2FD',
+    width:Dimensions.get('window').width / 2.5, 
+    height:Dimensions.get('window').height / 20, 
+  },
+  typeText:{
+    marginLeft:6,
+    color:'red',
+    fontWeight: 'bold',
+  },
+  typeTextClasic:{
+    marginLeft:6,
+    color:'green',
+    fontWeight: 'bold',
+  },
 });
 
 export default styles;

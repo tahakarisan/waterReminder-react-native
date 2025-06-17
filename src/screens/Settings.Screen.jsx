@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ref, getDatabase, set, get } from 'firebase/database';
 import { database } from '../services/firebase';
 import notificationService from '../services/notificationService';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const SettingsScreen = () => {
   const [starterTime, setStarterTime] = useState('9.00');
@@ -149,7 +150,20 @@ const SettingsScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={[styles.title, isTablet && styles.titleTablet]}>Ayarlar</Text>
-      
+      <View style={styles.typeSettingContainer}>
+        <View style={styles.typeClasic}>
+          <View style={{flexDirection:"row", justifyContent:"space-between"}}>
+            <Icon name="schedule" size={24} color="green"/>
+            <Text style={styles.typeTextClasic}>Klasik</Text>
+          </View>
+        </View>
+        <View style={styles.typeClever}>
+          <View style={{flexDirection:"row", justifyContent:"space-between"}}>
+          <Icon name="smart-toy" size={24} color="red"/>
+          <Text style={styles.typeText}>Akıllı Zamanlama</Text>
+          </View>
+        </View>
+      </View>
       <View style={styles.contentContainer}>
         {/* Daily Target Slider */}
         <View style={[styles.settingContainer, styles.sliderContainer]}>

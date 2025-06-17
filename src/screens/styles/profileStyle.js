@@ -9,6 +9,7 @@ const styles = StyleSheet.create({
         marginBottom:50,
         marginRight:250
       },
+      
       mainContainer: {
         marginTop:60,
         padding: 20,
@@ -28,6 +29,11 @@ const styles = StyleSheet.create({
         width: "90%",
         height:400,
         alignSelf: "center",
+      },
+      center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
       },
       editContainer: {
         marginTop:80,
@@ -116,6 +122,10 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         color: "#333",
+      },
+      typeSettingContainer:{
+        flexDirection: "column",
+        justifyContent: "space-between",
       },
   });
 

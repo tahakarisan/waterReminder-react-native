@@ -18,7 +18,7 @@ const ProfileScreen = ({navigation}) => {
       const value = await AsyncStorage.getItem(key);
       return value ? value : null; 
     } catch (error) {
-      console.error("Veri okunurken hata oluştu:", error);
+      console.error("Veri okunurken hata oluştu:eyüp", error);
       return null;
     }
   }
@@ -107,7 +107,9 @@ const ProfileScreen = ({navigation}) => {
 
   if(dataLoaded==false){
     return(
-      <ActivityIndicator style={{alignItems:"center"}} size="large" color="#00ff00"/>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#1976D2" />
+      </View>
     )
   }
   return (
