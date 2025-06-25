@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@hookform/resolvers": "^5.0.1",
+    "@react-native-community/netinfo": "^11.4.1",
+    "@react-native-firebase/app": "^21.13.0",
+    "google-auth-library": "^10.1.0",
+    "node-fetch": "^3.3.2",
+    "react-hook-form": "^7.56.4",
+    "react-native-toast-message": "^2.3.0",
+    "yup": "^1.6.1"
+  }
+}
