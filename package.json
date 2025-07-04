@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@react-native-community/netinfo": "^11.4.1",
@@ -9,8 +8,7 @@
     "react-hook-form": "^7.56.4",
     "react-native-toast-message": "^2.3.0",
     "yup": "^1.6.1"
-  }
-=======
+  },
   "name": "waterreminder",
   "version": "0.0.1",
   "private": true,
@@ -96,5 +94,4 @@
     "url": "https://github.com/tahakarisan/waterReminder-react-native/issues"
   },
   "homepage": "https://github.com/tahakarisan/waterReminder-react-native#readme"
->>>>>>> fd5344354aa3c6b28c45fd876d35d838b6f2ee38
 }
